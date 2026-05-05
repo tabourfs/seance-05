@@ -91,19 +91,51 @@
 /* Tu compléteras ce script étape par étape (voir README.md). */
 
 /* --- Étape 1 uniquement (départ) : URL incomplète — seulement …/v1 (sans /forecast ni paramètres) → le serveur répond 404. */
-const URL_METEO = 'https://api.open-meteo.com/v1';
+const URL_METEO = 'https://api.open-meteo.com/v1/forecast?latitude=41.9189&longitude=8.7381&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FParis';
 
-async function chargerMeteo() {
+const villeEl = document.querySelector('#ville');
+const statutEl = document.querySelector('#statut');
+const erreurEl = document.querySelector('#erreur');
+const listeEl = document.querySelector('#liste-previsions');
+
+
+async function LoadForecast() {
+  erreurEl.hidden = true;
+  erreurEl.textContent = '';
+  statutEl.textContent = 'Loading…';
+  listeEl.innerHTML = '';
   try {
     const response = await fetch(URL_METEO);
-    console.log('Objet Response :', response);
-    console.log('status HTTP :', response.status, '| response.ok :', response.ok);
-  } catch (err) {
-    console.error('Erreur pendant fetch (réseau / CORS / etc.) :', err);
+    if(!response.ok){
+      throw new Error('HTTP Response' + response);
+    }
+    const data = await response.json();
+    data.daily.time.forEach((dateStr, i) => {
+    const max = data.daily.temperature_2m_max[i];
+    const min = data.daily.temperature_2m_min[i];
+    const li = document.createElement('li');
+    const hi = max != null ? Math.round(max) : '–';
+    const lo = min != null ? Math.round(min) : '–';
+    li.textContent = dateStr + ' — max ' + hi + ' °C, min ' + lo + ' °C';
+    listeEl.appendChild(li);
+    });
+    statutEl.textContent = ''
+    villeEl.textContent = 'Ajaccio'
+    //console.log('Données parsées :', data);
+    //console.log('Objet Response :', response);
+    //console.log('status HTTP :', response.status, '| response.ok :', response.ok);
+  } catch (error) {
+    //console.error('Erreur pendant fetch (réseau / CORS / etc.) :', error);
+    statutEl.textContent = '';
+    erreurEl.hidden = false;
+    villeEl.textContent = 'Error'
+    erreurEl.textContent = 'Could Not Load Forecast : ' + error.message;
   }
 }
 
-chargerMeteo();
+
+
+LoadForecast();
 
 /* Les étapes suivantes (sélecteurs, JSON, affichage, messages…) seront ajoutées au fil du TP — voir README. */
 </script>
